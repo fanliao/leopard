@@ -35,6 +35,7 @@ How to use:
     
 ### Session和对象CRUD操作
 
+所有查询根据参数来判断要返回对象列表，单个对象还是Map列表
 
 s := mapping.newSession("sourceName").using(dbName) //using可选，如果操作默认数据库无需using
 
@@ -60,11 +61,13 @@ s.Delete(whereSql)
 
 ###复杂查询
 
-s.Query(sql).Get(&objSlice) //原生sql
+s.Query(sql).Find(&objSlice) //原生sql
 
-s.Query().Where(whereStr).OrderBy(orderStr).Limit(n).Join(&obj.r1....).JoinAll().Get(&objSlice, aSync) //join
+//JoinAll()表示查询所有关联对象
 
-s.QueryRelater(&obj)  //查询对象的关联对象
+s.Query().Where(whereStr).OrderBy(orderStr).Limit(n).Join(“refobj1"....).JoinAll().Find(&objSlice, aSync) //join
+
+s.FindRef(&obj)  //查询对象的关联对象，只打算支持1层关联
 
 //主键策略支持数据库自增或ORM库自动生成UID
 
