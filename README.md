@@ -3,23 +3,17 @@ leopard
 
 A simple and fast mapping framework
 
+设计目标：效率高，接口简单，支持原生SQL，支持完善的ORM功能
+
 How to use:
 
 ## 设置与注册数据库
 
 ### 设置
 
-#####Debug
+#####开启和关闭Debug
 
     mapping.Debug(bool) //开启debug logs
-    
-####注册Log处理实现
-
-    mapping.Loger(Logger) //注册自定义的Logger实现
-    
-####注册全局缓存实现
-
-    mapping.GlobalCacher(Cacher) //注册自定义的全局缓存实现
     
 ####注册数据库
 
@@ -29,11 +23,21 @@ How to use:
 
     mapping.RegisterDriver(driver, dbType)
     
+####注册各种自定义模块：
+
+#####Log处理实现
+
+    mapping.RegisterModule(Logger) //注册自定义的Logger实现
+    
+#####注册全局缓存实现
+
+    mapping.RegisterModule(Cacher) //注册自定义的全局缓存实现
+    
 ####注册自定义映射实现
 
-    mapping.RegitserMapping(Mapper)
+    mapping.RegitserModule(Mapper) //注册自定义的结构名-表映射和结构字段名-数据库字段名映射处理模块
     
-### Session和对象CRUD操作
+### Session和基本的对象CRUD操作
 
 所有查询根据参数来判断要返回对象列表，单个对象还是Map列表
 
@@ -41,7 +45,7 @@ s := mapping.newSession("sourceName").using(dbName) //using可选，如果操作
 
 s.Find(&objSlice)
 
-s.Find(id, &obj)
+s.Find(id, &obj)    //如果根据一个值Find一个对象，则这个值必须是主键值
 
 s.Update(&o)
 
@@ -61,13 +65,25 @@ s.Delete(whereSql)
 
 ###复杂查询
 
+一个查询函数处理查询列表或者查询单个对象，根据传入的对象引用来进行判断
+
 s.Query(sql).Find(&objSlice) //原生sql
+
+s.Query().Where(whereStr).OrderBy(orderStr).Limit(n).Find(&objSlice, aSync) //根据提供的Where，Orderby，Limit进行查询
+
+###对关联对象的查询
+
+//Join查询指定的关联对象，JoinAll查询所有关联对象（只查询一层），程序将生成join sql来提高效率
+
+s.Query().Where(whereStr).Join(“refobj1"....).JoinAll().Find(&objSlice, aSync) //join
 
 //JoinAll()表示查询所有关联对象
 
-s.Query().Where(whereStr).OrderBy(orderStr).Limit(n).Join(“refobj1"....).JoinAll().Find(&objSlice, aSync) //join
-
 s.FindRef(&obj)  //查询对象的关联对象，只打算支持1层关联
+
+###对异步查询的支持
+
+所有的Find与CRUD函数都支持async参数
 
 //主键策略支持数据库自增或ORM库自动生成UID
 
