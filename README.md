@@ -67,19 +67,23 @@ s.Delete(whereSql)
 
 一个查询函数处理查询列表或者查询单个对象，根据传入的对象引用来进行判断
 
-s.Query(sql).Find(&objSlice) //原生sql
+s.Query().Raw(sql).Find(&objSlice) //原生sql
 
 s.Query().Where(whereStr).OrderBy(orderStr).Limit(n).Find(&objSlice, aSync) //根据提供的Where，Orderby，Limit进行查询
 
 ###对关联对象的查询
 
-//Join查询指定的关联对象，JoinAll查询所有关联对象（只查询一层），程序将生成join sql来提高效率
+//默认不对关联对象进行Join查询
+
+//如果需要对关联对象进行Join查询，使用Join(“refobj1"....)或者JoinAll()，JoinAll查询所有关联对象（只查询一层），程序将生成join sql来提高效率，Join的参数是关联对象的字段名称
 
 s.Query().Where(whereStr).Join(“refobj1"....).JoinAll().Find(&objSlice, aSync) //join
 
 //JoinAll()表示查询所有关联对象
 
-s.FindRef(&obj)  //查询对象的关联对象，只打算支持1层关联
+s.FindRef(&obj, obj.refobj1, obj.refobj2...)  //重新获取查询对象的关联对象，只打算支持1层关联，如果关联对象已经存在，则跳过
+
+s.FindAllRef(&obj)              //重新获取查询对象的关联对象，只支持1层关联，如果关联对象已经存在，则跳过
 
 ###对异步查询的支持
 
@@ -122,17 +126,10 @@ s.Commit()
 
 s.Rollback()
 
-//注册组件
-
-mapping.register(&schemaMapping)
-
-mapping.register(&dbDriver)
-
-mapping.register($gloalCacher)
-
-mapping.register($logger)
-
 //cache
+
+Cache支持一级和二级缓存，查询对象的顺序为一级缓存》二级缓存》数据库。一级缓存保存的是对象引用，所以任何对对象内容的修改都直接反映到一级缓存。而二级缓存要等对象进行CUD操作或提交事务时才更新
+
 //批量SQL设置
 //执行速度必须快
 //支持根据关联表字段进行查询
