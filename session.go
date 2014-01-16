@@ -39,7 +39,7 @@ func (this Session) Update(obj interface{}) error {
 	//如果有timestamp，mapping对象将使用返回值更新原对象
 	error := mapping.toStruct(result, obj)
 	//处理缓存
-	error := cacheMgr.cache(obj)
+	error = cacheMgr.cache(obj)
 	return error
 }
 
