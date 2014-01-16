@@ -45,7 +45,7 @@ s := mapping.newSession("sourceName").using(dbName) //using可选，如果操作
 
 s.Find(&objSlice)
 
-s.Find(id, &obj)    //如果根据一个值Find一个对象，则这个值必须是主键值
+s.FindById(id, &obj)    //如果根据一个值Find一个对象，则这个值必须是主键值
 
 s.Update(&o)
 
