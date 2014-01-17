@@ -47,7 +47,7 @@ func (this Session) Update(obj interface{}) error {
 func (this Session) Delete(obj interface{}) error {
 	//newDelete产生删除对象和删除参数对象，为了性能优化，删除对象和产生的SQL将进行缓存
 	//删除对象和参数对象交由db接口执行，db接口将产生最终的SQL并得到结果集
-	result := dber.exec(newUpdate(...))  //queryer, args := newQuery(...)
+	result := dber.exec(newDelete(...))  //queryer, args := newQuery(...)
 	//如果有timestamp，mapping对象将使用返回值更新原对象
 	//error := mapping.toStruct(result, obj)
 	//处理缓存
