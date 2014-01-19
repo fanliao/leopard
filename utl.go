@@ -1,5 +1,9 @@
 package orm
 
+import (
+    "reflect"
+)
+
 //// BKDR Hash Function
 //unsigned int BKDRHash(char *str)
 //{
@@ -25,3 +29,9 @@ func BKDRHash(s string) uint {
 
 	return (hash & 0x7FFFFFFF)
 }
+
+//如果对象是一个pointer,则返回被指向对象的类型，如果是slice，返回slice元素的类型，否则出错
+func GetStructType(obj interface{}) reflect.Type, error {
+    return nil, nil
+}
+

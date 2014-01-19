@@ -25,7 +25,7 @@ func (this Session) Insert(obj interface{}) error {
 	//插入对象和参数对象交由db接口执行，db接口将产生最终的SQL并得到结果集
 	result := dber.exec(newInsert(...))  //queryer, args := newQuery(...)
 	//如果有自增或者timestamp，mapping对象将使用返回值更新原对象
-	error := mapping.toStruct(result, obj)
+	//error := mapping.toStruct(result, obj)
 	//处理缓存
 	error := cacheMgr.cache(obj)
 	return error
@@ -37,7 +37,7 @@ func (this Session) Update(obj interface{}) error {
 	//更新对象和参数对象交由db接口执行，db接口将产生最终的SQL并得到结果集
 	result := dber.exec(newUpdate(...))  //queryer, args := newQuery(...)
 	//如果有timestamp，mapping对象将使用返回值更新原对象
-	error := mapping.toStruct(result, obj)
+	//error := mapping.toStruct(result, obj)
 	//处理缓存
 	error = cacheMgr.cache(obj)
 	return error
