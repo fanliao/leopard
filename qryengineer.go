@@ -27,13 +27,31 @@ func (this qryEngineer) sql(dbOpt dbOperation) ([]sql, error) {
         case query:
         case insert:
         case update:
+			
         case delete:
             //create delete sql
             itr := dbOpt.getIterator()
-            sql := 
-            for next, ok, err := itr();ok {
-                whereStr := 
-            }
+			meta := metas.get(dbOpt.objType)
+            sql := meta.getDeleteSql()
+			i := 0
+			if dbOpt.getArgsCount() == 1 {
+				whereArgs := meta.getWhereArgs( next)
+				sql = getDeleteSql(meta, whereArgs)
+			} else {
+				whereArgs := make
+				for next, ok, err := itr();ok {
+					whereArgs := meta.getWhereArgs( next)
+					i++
+				}
+				sql = getBatchDeleteSql(meta, whereArgs)
+			}
+			
+			var sql string
+			if i == 1{
+				sql = getDeleteSql(meta, whereArgs)
+			} else {
+				sql = getBatchDeleteSql(meta, whereArgs)
+			}
             
     }
 
@@ -47,7 +65,11 @@ func (this qryEngineer) execSql(sql string, interface{}...) (Result, error){
 	
 }
 
-func (this qryEngineer) getDeleteSql() {
+func (this qryEngineer) getDeleteSql() string{
+    
+}
+
+func (this qryEngineer) getBatchDeleteSql() string{
     
 }
 
