@@ -123,5 +123,12 @@ func (this dbOperation) Raw(raw string) dbOperation{
 
 //如果允许级联操作，那么Expand函数将返回一个代表所有DB操作的slice
 func (this dbOperation) Expand() []dbOperation{
-    return nil
+    meta := metas.get(this.objType)
+	if meta.cas == cas_insert && optType == insert {
+		//处理级联插入
+	} else if meta.cas == cas_update && optType == update {
+		//处理级联插入
+	} else if meta.cas == cas_delete && optType == delete {
+		//处理级联插入
+	}
 }
