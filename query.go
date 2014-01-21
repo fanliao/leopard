@@ -4,6 +4,7 @@ import {
 	"reflect"
     "unsafe"
     "errors"
+	"container/list"
 }
 
 const (
@@ -22,7 +23,8 @@ type where struct{
 type dbOperation struct {
 	optType int
 	objType reflect.Type
-	obj		interface{}    //如果是IDU操作，obj是要保存的对象
+	//obj		interface{}    //如果是IDU操作，obj是要保存的对象
+	ptr		unsafe.Pointer  //指向要操作对象的pointer
 	rawSql  string		//原生SQL
 	args    interface{}   //原生SQL或查询对象的参数
 	where   //Where(whereStr).OrderBy(orderStr).Limit(n).offset(n)
@@ -121,14 +123,35 @@ func (this dbOperation) Raw(raw string) dbOperation{
     return this
 }
 
-//如果允许级联操作，那么Expand函数将返回一个代表所有DB操作的slice
-func (this dbOperation) Expand() []dbOperation{
-    meta := metas.get(this.objType)
-	if meta.cas == cas_insert && optType == insert {
-		//处理级联插入
-	} else if meta.cas == cas_update && optType == update {
-		//处理级联插入
-	} else if meta.cas == cas_delete && optType == delete {
-		//处理级联插入
+//如果允许级联操作，那么Expand函数将返回一个代表所有DB操作的List
+func (this dbOperation) Expand() List{
+	list := list.New()
+	
+	list.pushBack(this)
+    mapping := getMapping(this.objType)
+	for name, propMap := rang mapping.propMappings {
+		if c, ok := propMap.(cascader);ok {
+			cascade := c.CascadeType() 
+			if cascade  == cascade_insert && optType == insert {
+				//处理级联插入
+				switch v := propMap.(type) {
+					case *oneMapping:
+						do := dbOperation{insert, v.refType, mapping.fastRW.Ptr(this.ptr, propMap.index)}
+						list.pushBack(do)
+					case *manyMapping:
+						do := dbOperation{insert, v.refType, mapping.fastRW.Ptr(this.ptr, propMap.index)}
+						list.pushBack(do)
+					case *m2mMapping:
+						//多对多关联需要生成insert中间表的SQL，并且中间表没有对应的类型，只能生成原生的SQL
+				}
+			} else if cascade  == cascade_update && optType == update {
+				//处理级联更新
+				
+			} else if cascade  == cascade_delete && optType == delete {
+				//处理级联删除
+			}
+		}
+		
 	}
+	return list
 }

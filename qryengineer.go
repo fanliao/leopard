@@ -32,18 +32,16 @@ func (this qryEngineer) sql(dbOpt dbOperation) ([]sql, error) {
             //create delete sql
             itr := dbOpt.getIterator()
 			meta := metas.get(dbOpt.objType)
-            sql := meta.getDeleteSql()
+
 			i := 0
 			if dbOpt.getArgsCount() == 1 {
 				whereArgs := meta.getWhereArgs( next)
-				sql = getDeleteSql(meta, whereArgs)
 			} else {
 				whereArgs := make
 				for next, ok, err := itr();ok {
 					whereArgs := meta.getWhereArgs( next)
 					i++
 				}
-				sql = getBatchDeleteSql(meta, whereArgs)
 			}
 			
 			var sql string

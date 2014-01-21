@@ -34,17 +34,20 @@ const (
 	cascade_none = iota
 	cascade_delete
 	cascade_update
+	cascade_insert
 )
 
 type tableMapping struct {
 	typ         reflect.Type
 	tableName   string
 	pk          string
-	propMapping map[string]interface{}
+	propMappings map[string]interface{}
+	fastRW 		*FastRW //读写对象属性的工具类
 }
 
 type propMapping struct {
 	propName string
+	index int
 }
 
 type colMapping struct {
@@ -53,6 +56,11 @@ type colMapping struct {
 	dbType  string
 	null    bool
 	propMapping
+}
+
+//表示级联属性的接口。
+type cascader interface {
+	CascadeType() int
 }
 
 type oneMapping struct {
