@@ -59,16 +59,16 @@ func (this *FastRW) Ptr(obj unsafe.Pointer, i int) unsafe.Pointer {
 	return FastGet(obj, this, i)
 }
 
-func (this *FastRW) Value(obj unsafe.Pointer, i int) interface{} {
+func (this *FastRW) Value(obj unsafe.Pointer, i int) (interface{}, unsafe.Pointer) {
 	typ, ptr := this.FieldTypesByIndex[i], FastGet(obj, this, i)
-	return getValue(typ, ptr)
+	return getValue(typ, ptr), ptr
 }
 
 func (this *FastRW) PtrByName(obj unsafe.Pointer, fieldName string) unsafe.Pointer {
 	return this.Ptr(obj, this.FieldIndexsByName[fieldName])
 }
 
-func (this *FastRW) GetValueByName(obj unsafe.Pointer, fieldName string) interface{} {
+func (this *FastRW) GetValueByName(obj unsafe.Pointer, fieldName string) (interface{}, unsafe.Pointer) {
 	return this.Value(obj, this.FieldIndexsByName[fieldName])
 }
 

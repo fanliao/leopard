@@ -10,8 +10,9 @@ import {
 const (
 	query = iota
 	insert
-	delete
+	del
 	update
+    save        //可以是update或者insert，根据对象状态
 )
 
 type where struct{
@@ -19,12 +20,7 @@ type where struct{
     args interface{}
 }
 
-//表示一个数据库操作，可以是CRUD中任意类型
-type dbOperation struct {
-	optType int
-	objType reflect.Type
-	//obj		interface{}    //如果是IDU操作，obj是要保存的对象
-	ptr		unsafe.Pointer  //指向要操作对象的pointer
+type query struct {
 	rawSql  string		//原生SQL
 	args    interface{}   //原生SQL或查询对象的参数
 	where   //Where(whereStr).OrderBy(orderStr).Limit(n).offset(n)
@@ -33,12 +29,22 @@ type dbOperation struct {
 	offset  int
 }
 
+//表示一个数据库操作，可以是CRUD中任意类型
+type dbOperation struct {
+	oprtType int
+	objType reflect.Type
+	obj		interface{}    //如果是IDU操作，obj是要保存的对象
+	ptr		unsafe.Pointer  //指向要操作对象的pointer
+    query
+}
 
-func (this dbOperation) getIterator() func()(unsafe.Pointer, ok, error){
+
+func (this dbOperation) getIterator() func()(interface{}, ok, error){
     var i int = 0
     var count int
     oneObj bool
     
+    obj := this.obj
     if reflect.ValueOf(obj).Elem().Type().Kind() == reflect.Struct {
         oneObj = true;
     } else if reflect.ValueOf(obj).Elem().Type().Kind() == reflect.Slice{
@@ -52,13 +58,13 @@ func (this dbOperation) getIterator() func()(unsafe.Pointer, ok, error){
     return func()( result unsafe.Pointer, ok bool, err error){
         if oneObj{
             if i == 0 {
-                return InterfaceToPtr(obj), true, nil
+                return obj, true, nil
             } else {
                 return nil, false, nil
             }
         } else {
             if i < count {
-                result = InterfaceToPtr(s.Index(i))
+                result = s.Index(i)
                 err = nil
                 ok = true
                 i++
@@ -94,7 +100,7 @@ func NewUpdate(obj interface{})dbOperation{
 //删除操作，可以是删除一个对象（obj是1个指针）或多个对象（obj是1个Slice）
 func NewDelete(obj interface{})dbOperation{
     typ, err := GetStructType(obj)
-    return dbOperation{delete, typ, obj}
+    return dbOperation{del, typ, obj}
 }
 
 //.Where(whereStr).OrderBy(orderStr).Limit(n).Find
@@ -132,23 +138,48 @@ func (this dbOperation) Expand() List{
 	for name, propMap := rang mapping.propMappings {
 		if c, ok := propMap.(cascader);ok {
 			cascade := c.CascadeType() 
-			if cascade  == cascade_insert && optType == insert {
+            if cascade == cascade_none {
+                continue
+            }
+            
+            v, p := mapping.fastRW.Value(this.ptr, propMap.index)
+			if cascade == cascade_insert && optType == insert {
 				//处理级联插入
 				switch v := propMap.(type) {
 					case *oneMapping:
-						do := dbOperation{insert, v.refType, mapping.fastRW.Ptr(this.ptr, propMap.index)}
+						do := dbOperation{insert, v.refType, v, p}
 						list.pushBack(do)
 					case *manyMapping:
-						do := dbOperation{insert, v.refType, mapping.fastRW.Ptr(this.ptr, propMap.index)}
+						do := dbOperation{insert, v.refType, v, p}
 						list.pushBack(do)
 					case *m2mMapping:
 						//多对多关联需要生成insert中间表的SQL，并且中间表没有对应的类型，只能生成原生的SQL
 				}
 			} else if cascade  == cascade_update && optType == update {
 				//处理级联更新
-				
+                //级联更新的难点：如何判断集合中哪些元素被删除
+				switch v := propMap.(type) {
+					case *oneMapping:
+						do := dbOperation{save, v.refType, v, p}
+						list.pushBack(do)
+					case *manyMapping:
+						do := dbOperation{save, v.refType, v, p}
+						list.pushBack(do)
+					case *m2mMapping:
+						//多对多关联需要生成save中间表的SQL，并且中间表没有对应的类型，只能生成原生的SQL
+				}
 			} else if cascade  == cascade_delete && optType == delete {
 				//处理级联删除
+				switch v := propMap.(type) {
+					case *oneMapping:
+						do := dbOperation{del, v.refType, v, p}
+						list.pushFront(do)
+					case *manyMapping:
+						do := dbOperation{del, v.refType, v, p}
+						list.pushFront(do)
+					case *m2mMapping:
+						//多对多关联需要生成save中间表的SQL，并且中间表没有对应的类型，只能生成原生的SQL
+				}
 			}
 		}
 		
