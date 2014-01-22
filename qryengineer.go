@@ -1,6 +1,6 @@
 package orm
 
-type qryEngineer struct {
+type sqlEngineer struct {
 }
 
 type sql struct{
@@ -14,7 +14,7 @@ type sql struct{
 //1. 多个SQL使用多个异步执行
 //2. 多个SQL可以合并到一个batch语句中执行
 //3. 预编译
-func (this qryEngineer) Exec(dbOpt dbOperation) (result Result, err error) {
+func (this sqlEngineer) Exec(dbOpt dbOperation) (result Result, err error) {
 	sqls, err := this.sql(dbOpt)
 	result, err = this.execSql(sqls)
 	return result, err
@@ -22,7 +22,7 @@ func (this qryEngineer) Exec(dbOpt dbOperation) (result Result, err error) {
 
 //生成dbOperation对应的SQL,1个dbOperation可以对应多条sql
 //此处要考虑缓存
-func (this qryEngineer) sql(dbOpt dbOperation) ([]sql, error) {
+func (this sqlEngineer) sql(dbOpt dbOperation) ([]sql, error) {
     switch dbOpt.optType{
         case query:
         case insert:
@@ -59,15 +59,15 @@ func (this qryEnginerr) execBatchSql(sqls []sql) （Result, error) {
 }
 
 //执行SQL
-func (this qryEngineer) execSql(sql string, interface{}...) (Result, error){
+func (this sqlEngineer) execSql(sql string, interface{}...) (Result, error){
 	
 }
 
-func (this qryEngineer) getDeleteSql() string{
+func (this sqlEngineer) getDeleteSql() string{
     
 }
 
-func (this qryEngineer) getBatchDeleteSql() string{
+func (this sqlEngineer) getBatchDeleteSql() string{
     
 }
 
